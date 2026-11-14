@@ -109,6 +109,7 @@ export function ExerciseCard({
             localStorage.setItem(key, JSON.stringify([...sessions, session]));
             setRevision((value) => value + 1);
             setOpen(false);
+            window.dispatchEvent(new Event('mission-pulse:update'));
           }}
         />
       )}

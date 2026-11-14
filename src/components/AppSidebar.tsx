@@ -1,28 +1,46 @@
-import { Activity, Bell, HeartPulse, ShieldAlert, Users } from 'lucide-react';
-export function AppSidebar() {
+import { Activity, Bell, HeartPulse, LogIn, ShieldAlert, Users } from 'lucide-react';
+export function AppSidebar({
+  view,
+  onCommand,
+  onPersonal,
+}: {
+  view: 'command' | 'personal';
+  onCommand: () => void;
+  onPersonal: () => void;
+}) {
   return (
     <aside className="rail" aria-label="Application navigation">
       <div className="mark">
         <span>MP</span>
       </div>
       <div className="rail-line" />
-      <button className="rail-active" aria-label="Mission overview">
+      <button
+        className={view === 'command' ? 'rail-active' : ''}
+        aria-label="Command centre"
+        onClick={onCommand}
+      >
         <Activity />
       </button>
-      <button aria-label="Crew">
+      <button
+        aria-label="Personal"
+        className={view === 'personal' ? 'rail-active' : ''}
+        onClick={onPersonal}
+      >
         <Users />
       </button>
-      <button aria-label="Health">
+      <button aria-label="Health" onClick={onPersonal}>
         <HeartPulse />
       </button>
-      <button aria-label="Safety">
+      <button aria-label="Safety" onClick={onCommand}>
         <ShieldAlert />
       </button>
       <div className="rail-bottom">
         <button aria-label="Notifications">
           <Bell />
         </button>
-        <div className="tiny-avatar">MN</div>
+        <button aria-label="Personal login" onClick={onPersonal}>
+          <LogIn />
+        </button>
       </div>
     </aside>
   );

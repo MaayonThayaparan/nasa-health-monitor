@@ -1,54 +1,37 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { AppSidebar } from './components/AppSidebar';
-import { CrewDetail } from './components/CrewDetail';
-import { CrewHealthPanel } from './components/CrewHealthPanel';
-import { EnvironmentMetrics } from './components/EnvironmentMetrics';
+import { CommandCentre } from './components/CommandCentre';
 import { MissionHeader } from './components/MissionHeader';
-import { MissionHero } from './components/MissionHero';
-import { PriorityQueue } from './components/PriorityQueue';
-import { ScheduledTasks } from './components/ScheduledTasks';
-import { Toast } from './components/Toast';
-import { alertsFor, crew, environment } from './data/missionData';
+import { PersonalLogin } from './components/PersonalLogin';
+import { PersonalWorkspace } from './components/PersonalWorkspace';
+import { crew } from './data/missionData';
+
 export default function App() {
   const [solar, setSolar] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [notice, setNotice] = useState(false);
-  const shownCrew = useMemo(
-    () =>
-      crew.map((person) =>
-        solar && person.id === 'mateo'
-          ? person
-          : {
-              ...person,
-              status: 'stable' as const,
-              score: person.id === 'leon' ? 89 : person.score,
-            },
-      ),
-    [solar],
-  );
-  const activeCrew = selectedId ? shownCrew.find((person) => person.id === selectedId) : undefined;
+  const [view, setView] = useState<'command' | 'personal'>('command');
+  const [loggedInId, setLoggedInId] = useState<string | null>(null);
+  const person = crew.find((member) => member.id === loggedInId);
   return (
     <main>
-      <AppSidebar />
+      <AppSidebar
+        view={view}
+        onCommand={() => setView('command')}
+        onPersonal={() => setView('personal')}
+      />
       <section className="shell">
         <MissionHeader solar={solar} onToggle={() => setSolar((current) => !current)} />
-        {activeCrew ? (
-          <CrewDetail person={activeCrew} solar={solar} onBack={() => setSelectedId(null)} />
+        {view === 'command' ? (
+          <CommandCentre
+            solar={solar}
+            onSolarToggle={() => setSolar((current) => !current)}
+            onPersonal={() => setView('personal')}
+          />
+        ) : person ? (
+          <PersonalWorkspace person={person} solar={solar} onLogout={() => setLoggedInId(null)} />
         ) : (
-          <>
-            <MissionHero solar={solar} />
-            <EnvironmentMetrics metrics={solar ? environment.solar : environment.normal} />
-            <section className="grid">
-              <CrewHealthPanel crew={shownCrew} onSelect={setSelectedId} />
-              <div className="right-stack">
-                <PriorityQueue alerts={alertsFor(solar)} onAction={() => setNotice(true)} />
-                <ScheduledTasks />
-              </div>
-            </section>
-          </>
+          <PersonalLogin crew={crew} onLogin={setLoggedInId} />
         )}
       </section>
-      {notice && <Toast onClose={() => setNotice(false)} />}
     </main>
   );
 }

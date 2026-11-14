@@ -101,6 +101,7 @@ export function MentalHealthView({ astronautId }: { astronautId: string }) {
       ]),
     );
     setRevision((value) => value + 1);
+    window.dispatchEvent(new Event('mission-pulse:update'));
   };
   const saveJournal = () => {
     const text = journalText.trim();
@@ -114,6 +115,7 @@ export function MentalHealthView({ astronautId }: { astronautId: string }) {
     );
     setJournalText('');
     setJournalRevision((value) => value + 1);
+    window.dispatchEvent(new Event('mission-pulse:update'));
   };
   return (
     <div className="health-view">

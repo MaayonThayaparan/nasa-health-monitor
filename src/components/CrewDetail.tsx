@@ -7,16 +7,20 @@ export function CrewDetail({
   person,
   solar,
   onBack,
+  embedded = false,
 }: {
   person: CrewMember;
   solar: boolean;
   onBack: () => void;
+  embedded?: boolean;
 }) {
   return (
     <section className="detail">
-      <button className="back" onClick={onBack}>
-        <ArrowLeft size={17} /> Back to mission overview
-      </button>
+      {!embedded && (
+        <button className="back" onClick={onBack}>
+          <ArrowLeft size={17} /> Back to mission overview
+        </button>
+      )}
       <div className="profile">
         <div className="avatar large" style={{ background: person.color }}>
           {person.initials}
