@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { MentalHealthView } from './MentalHealthView';
 import { PhysicalHealthView } from './PhysicalHealthView';
-export function HealthProfileTabs({ astronautId }: { astronautId: string }) {
-  const [tab, setTab] = useState<'physical' | 'mental'>('physical');
+import { ProtocolView } from './ProtocolView';
+export function HealthProfileTabs({ astronautId, solar }: { astronautId: string; solar: boolean }) {
+  const [tab, setTab] = useState<'physical' | 'mental' | 'protocols'>('physical');
   return (
     <>
       <div className="health-tabs" role="tablist">
@@ -22,11 +23,21 @@ export function HealthProfileTabs({ astronautId }: { astronautId: string }) {
         >
           Mental
         </button>
+        <button
+          role="tab"
+          aria-selected={tab === 'protocols'}
+          className={tab === 'protocols' ? 'active' : ''}
+          onClick={() => setTab('protocols')}
+        >
+          Protocols
+        </button>
       </div>
       {tab === 'physical' ? (
         <PhysicalHealthView astronautId={astronautId} />
-      ) : (
+      ) : tab === 'mental' ? (
         <MentalHealthView astronautId={astronautId} />
+      ) : (
+        <ProtocolView solar={solar} />
       )}
     </>
   );

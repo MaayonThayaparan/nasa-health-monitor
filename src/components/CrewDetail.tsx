@@ -5,6 +5,7 @@ import { StatusBadge } from './StatusBadge';
 
 export function CrewDetail({
   person,
+  solar,
   onBack,
 }: {
   person: CrewMember;
@@ -33,7 +34,7 @@ export function CrewDetail({
           <StatusBadge status={person.status} />
         </div>
       </div>
-      <HealthProfileTabs astronautId={person.id} />
+      <HealthProfileTabs astronautId={person.id} solar={solar} />
     </section>
   );
 }

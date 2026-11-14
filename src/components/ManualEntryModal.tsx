@@ -4,17 +4,21 @@ export interface ManualEntry {
   date: string;
   note: string;
 }
+const localDateTime = () =>
+  new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 export function ManualEntryModal({
   metric,
+  unit,
   onSave,
   onClose,
 }: {
   metric: string;
+  unit: string;
   onSave: (_entry: ManualEntry) => void;
   onClose: () => void;
 }) {
   const [value, setValue] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 16));
+  const [date, setDate] = useState(localDateTime);
   const [note, setNote] = useState('');
   const future = new Date(date) > new Date();
   return (
@@ -37,7 +41,7 @@ export function ManualEntryModal({
         <p className="eyebrow">MANUAL ENTRY</p>
         <h3>{metric}</h3>
         <label>
-          Reading
+          Reading ({unit})
           <input
             required
             value={value}
@@ -52,6 +56,7 @@ export function ManualEntryModal({
             required
             type="datetime-local"
             value={date}
+            max={localDateTime()}
             onChange={(event) => setDate(event.target.value)}
           />
         </label>
