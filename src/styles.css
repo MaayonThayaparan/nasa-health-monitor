@@ -531,6 +531,12 @@ h3 {
   gap: 8px;
   margin: 18px 0;
 }
+.metric-actions button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .secondary {
   border: 1px solid #465677;
   border-radius: 8px;

@@ -68,13 +68,15 @@ export function MentalHealthView({ astronautId }: { astronautId: string }) {
     })),
     {
       id: 'resilience',
-      label: 'Resilience activity completion',
+      label: 'Resilience activities completed',
       color: '#b8d26e',
       points: checkIns.map((checkIn) => ({
         day: new Date(checkIn.date).toLocaleDateString(),
-        value: Number((((checkIn.activities?.length ?? 0) / habits.length) * 5).toFixed(1)),
+        value: checkIn.activities?.length ?? 0,
         source: 'manual',
       })),
+      axis: 'right',
+      suffix: ' activities',
     },
   ];
   const toggleActivity = (activity: string) =>
@@ -179,10 +181,15 @@ export function MentalHealthView({ astronautId }: { astronautId: string }) {
           <p className="eyebrow">WELLNESS & RESILIENCE TRENDS</p>
           <h3>Daily check-in relationships</h3>
           <p className="metric-trend">
-            Wellness scores and resilience activity completion use the same 0–5 scale, making
-            patterns easy to compare.
+            Left axis: wellness scores from 1–5. Right axis: number of resilience activities
+            completed that day, from 0–6.
           </p>
-          <MultiTrendChart series={series} suffix=" / 5" />
+          <MultiTrendChart
+            series={series}
+            suffix=" / 5"
+            leftAxisLabel="Wellness score (1–5)"
+            rightAxis={{ label: 'Activities completed (0–6)', max: habits.length }}
+          />
         </section>
       )}
       {tab === 'journal' && (
