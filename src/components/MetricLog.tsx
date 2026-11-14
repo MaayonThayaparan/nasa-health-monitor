@@ -146,40 +146,40 @@ const metrics: MetricDefinition[] = [
   },
 ];
 
+export function getCrewMetrics(astronautId: string) {
+  return metrics.map((metric) => {
+    const variation =
+      metric.id === 'radiation-dose'
+        ? 0.02
+        : metric.id === 'blood-pressure'
+          ? 1.4
+          : metric.id === 'body-mass'
+            ? 0.4
+            : metric.id === 'bone-density'
+              ? 0.15
+              : metric.id === 'saliva-collection'
+                ? 0.08
+                : metric.id === 'urine-collection'
+                  ? 2
+                  : 0.6;
+    const values = personalizedSeries(
+      metric.trend.map((point) => point.value),
+      astronautId,
+      variation,
+    );
+    return {
+      ...metric,
+      value: values.at(-1) ?? metric.value,
+      trend: metric.trend.map((point, index) => ({ ...point, value: values[index] })),
+    };
+  });
+}
+
 export function MetricLog({ astronautId }: { astronautId: string }) {
   const [query, setQuery] = useState('');
   const [region, setRegion] = useState<BodyRegion>('heart');
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const crewMetrics = useMemo(
-    () =>
-      metrics.map((metric) => {
-        const variation =
-          metric.id === 'radiation-dose'
-            ? 0.02
-            : metric.id === 'blood-pressure'
-              ? 1.4
-              : metric.id === 'body-mass'
-                ? 0.4
-                : metric.id === 'bone-density'
-                  ? 0.15
-                  : metric.id === 'saliva-collection'
-                    ? 0.08
-                    : metric.id === 'urine-collection'
-                      ? 2
-                      : 0.6;
-        const values = personalizedSeries(
-          metric.trend.map((point) => point.value),
-          astronautId,
-          variation,
-        );
-        return {
-          ...metric,
-          value: values.at(-1) ?? metric.value,
-          trend: metric.trend.map((point, index) => ({ ...point, value: values[index] })),
-        };
-      }),
-    [astronautId],
-  );
+  const crewMetrics = useMemo(() => getCrewMetrics(astronautId), [astronautId]);
   const visible = useMemo(
     () =>
       crewMetrics.filter((metric) =>

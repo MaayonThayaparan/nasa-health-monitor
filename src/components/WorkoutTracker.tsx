@@ -99,9 +99,8 @@ const exercises: Exercise[] = [
   },
 ];
 
-export function WorkoutTracker({ astronautId }: { astronautId: string }) {
-  const [focusedId, setFocusedId] = useState<string | null>(null);
-  const crewExercises = exercises.map((exercise) => ({
+export function getCrewExercises(astronautId: string) {
+  return exercises.map((exercise) => ({
     ...exercise,
     trainingTrend: personalizedSeries(
       exercise.trainingTrend,
@@ -109,6 +108,11 @@ export function WorkoutTracker({ astronautId }: { astronautId: string }) {
       exercise.category === 'Resistance' ? 2.5 : 0.1,
     ),
   }));
+}
+
+export function WorkoutTracker({ astronautId }: { astronautId: string }) {
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const crewExercises = getCrewExercises(astronautId);
   const focused = crewExercises.find((exercise) => exercise.id === focusedId);
   return (
     <section className="panel workout-tracker">

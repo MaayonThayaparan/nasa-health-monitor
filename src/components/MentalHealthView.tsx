@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { TrendPanel } from './TrendPanel';
+import { MultiTrendChart, type TrendSeries } from './MultiTrendChart';
 
 const habits = [
   'Mindful breathing',
@@ -11,7 +11,9 @@ const habits = [
 ];
 const wellnessMetrics = ['Mood', 'Stress', 'Energy', 'Sleep quality', 'Connection'] as const;
 type WellnessMetric = (typeof wellnessMetrics)[number];
-type CheckIn = { date: string } & Record<WellnessMetric, number>;
+type CheckIn = { date: string; activities?: string[] } & Record<WellnessMetric, number>;
+type JournalEntry = { id: string; date: string; text: string };
+const colors = ['#6ea8ff', '#ffb86c', '#48d6b8', '#a980ff', '#ff7b89'];
 const seed: Record<WellnessMetric, number[]> = {
   Mood: [3, 4, 3, 4, 4],
   Stress: [3, 3, 2, 3, 2],
@@ -19,10 +21,14 @@ const seed: Record<WellnessMetric, number[]> = {
   'Sleep quality': [3, 3, 4, 3, 4],
   Connection: [2, 3, 3, 4, 4],
 };
+const dayKey = (date: string) => new Date(date).toLocaleDateString('en-CA');
 
 export function MentalHealthView({ astronautId }: { astronautId: string }) {
-  const key = `mission-pulse:wellness-checkins:${astronautId}`;
+  const checkInKey = `mission-pulse:wellness-checkins:${astronautId}`;
+  const journalKey = `mission-pulse:journal-entries:${astronautId}`;
+  const [tab, setTab] = useState<'check-in' | 'trends' | 'journal'>('check-in');
   const [revision, setRevision] = useState(0);
+  const [journalRevision, setJournalRevision] = useState(0);
   const [scores, setScores] = useState<Record<WellnessMetric, number>>({
     Mood: 3,
     Stress: 3,
@@ -30,126 +36,183 @@ export function MentalHealthView({ astronautId }: { astronautId: string }) {
     'Sleep quality': 3,
     Connection: 3,
   });
-  const [active, setActive] = useState<WellnessMetric>('Mood');
-  const [journal, setJournal] = useState(
-    () => localStorage.getItem(`mission-pulse:journal:${astronautId}`) ?? '',
-  );
-  const [checked, setChecked] = useState<string[]>(
-    () =>
-      JSON.parse(localStorage.getItem(`mission-pulse:habits:${astronautId}`) ?? '[]') as string[],
-  );
+  const [activities, setActivities] = useState<string[]>([]);
+  const [journalText, setJournalText] = useState('');
   const checkIns = useMemo(() => {
     void revision;
-    return JSON.parse(localStorage.getItem(key) ?? '[]') as CheckIn[];
-  }, [key, revision]);
-  const toggle = (habit: string) =>
-    setChecked((items) => {
-      const next = items.includes(habit)
-        ? items.filter((item) => item !== habit)
-        : [...items, habit];
-      localStorage.setItem(`mission-pulse:habits:${astronautId}`, JSON.stringify(next));
-      return next;
-    });
-  const points = [
-    ...seed[active].map((value, index) => ({
-      day: `D-${seed[active].length - index - 1}`,
-      value,
-      source: 'simulated',
+    return JSON.parse(localStorage.getItem(checkInKey) ?? '[]') as CheckIn[];
+  }, [checkInKey, revision]);
+  const entries = useMemo(() => {
+    void journalRevision;
+    return JSON.parse(localStorage.getItem(journalKey) ?? '[]') as JournalEntry[];
+  }, [journalKey, journalRevision]);
+  const today = dayKey(new Date().toISOString());
+  const completedToday = checkIns.some((item) => dayKey(item.date) === today);
+  const series: TrendSeries[] = [
+    ...wellnessMetrics.map((metric, index) => ({
+      id: metric,
+      label: metric,
+      color: colors[index],
+      points: [
+        ...seed[metric].map((value, point) => ({
+          day: `D-${seed[metric].length - point - 1}`,
+          value,
+          source: 'simulated',
+        })),
+        ...checkIns.map((checkIn) => ({
+          day: new Date(checkIn.date).toLocaleDateString(),
+          value: checkIn[metric],
+          source: 'manual',
+        })),
+      ],
     })),
-    ...checkIns.map((checkIn) => ({
-      day: new Date(checkIn.date).toLocaleDateString(),
-      value: checkIn[active],
-      source: 'manual',
-    })),
+    {
+      id: 'resilience',
+      label: 'Resilience activity completion',
+      color: '#b8d26e',
+      points: checkIns.map((checkIn) => ({
+        day: new Date(checkIn.date).toLocaleDateString(),
+        value: Number((((checkIn.activities?.length ?? 0) / habits.length) * 5).toFixed(1)),
+        source: 'manual',
+      })),
+    },
   ];
+  const toggleActivity = (activity: string) =>
+    setActivities((items) =>
+      items.includes(activity) ? items.filter((item) => item !== activity) : [...items, activity],
+    );
+  const saveCheckIn = () => {
+    const now = new Date().toISOString();
+    localStorage.setItem(
+      checkInKey,
+      JSON.stringify([
+        ...checkIns.filter((item) => dayKey(item.date) !== today),
+        { ...scores, activities, date: now },
+      ]),
+    );
+    setRevision((value) => value + 1);
+  };
+  const saveJournal = () => {
+    const text = journalText.trim();
+    if (!text) return;
+    localStorage.setItem(
+      journalKey,
+      JSON.stringify([
+        { id: crypto.randomUUID(), date: new Date().toISOString(), text },
+        ...entries,
+      ]),
+    );
+    setJournalText('');
+    setJournalRevision((value) => value + 1);
+  };
   return (
-    <div className="mental-grid">
-      <section className="panel questionnaire">
-        <p className="eyebrow">PRIVATE WELLNESS CHECK-IN</p>
-        <h3>How are you feeling today?</h3>
-        {wellnessMetrics.map((item) => (
-          <label className="scale" key={item}>
-            {item}
-            <input
-              type="range"
-              min="1"
-              max="5"
-              value={scores[item]}
-              onChange={(event) =>
-                setScores((current) => ({ ...current, [item]: Number(event.target.value) }))
-              }
-            />
-            <span>{scores[item]} / 5</span>
-          </label>
-        ))}
+    <div className="health-view">
+      <div className="physical-tabs" role="tablist">
         <button
-          className="primary"
-          onClick={() => {
-            localStorage.setItem(
-              key,
-              JSON.stringify([...checkIns, { ...scores, date: new Date().toISOString() }]),
-            );
-            setRevision((value) => value + 1);
-          }}
+          role="tab"
+          aria-selected={tab === 'check-in'}
+          className={tab === 'check-in' ? 'active' : ''}
+          onClick={() => setTab('check-in')}
         >
-          Save private check-in
+          Daily check-in
         </button>
-        <p className="entry-note">Private wellness scores are stored locally in this prototype.</p>
-      </section>
-      <section className="panel wellness-trends">
-        <p className="eyebrow">WELLNESS TRENDS</p>
-        <h3>Private check-in history</h3>
-        <div className="wellness-metric-buttons">
-          {wellnessMetrics.map((metric) => (
-            <button
-              key={metric}
-              className={active === metric ? 'active' : ''}
-              onClick={() => setActive(metric)}
-            >
-              {metric}
-              <b>{scores[metric]} / 5</b>
-            </button>
+        <button
+          role="tab"
+          aria-selected={tab === 'trends'}
+          className={tab === 'trends' ? 'active' : ''}
+          onClick={() => setTab('trends')}
+        >
+          Trends
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === 'journal'}
+          className={tab === 'journal' ? 'active' : ''}
+          onClick={() => setTab('journal')}
+        >
+          Journal
+        </button>
+      </div>
+      {tab === 'check-in' && (
+        <section className="panel questionnaire daily-checkin">
+          <p className="eyebrow">DAILY WELLNESS CHECK-IN</p>
+          <h3>How are you feeling today?</h3>
+          {wellnessMetrics.map((item) => (
+            <label className="scale" key={item}>
+              {item}
+              <input
+                type="range"
+                min="1"
+                max="5"
+                value={scores[item]}
+                onChange={(event) =>
+                  setScores((current) => ({ ...current, [item]: Number(event.target.value) }))
+                }
+              />
+              <span>{scores[item]} / 5</span>
+            </label>
           ))}
-        </div>
-        <TrendPanel
-          title={`${active} over time`}
-          description="1 is low and 5 is high; use patterns to start a private check-in or request support."
-          points={points}
-          unit="/ 5"
-        />
-      </section>
-      <section className="panel routine">
-        <p className="eyebrow">TODAY’S RESILIENCE ROUTINE</p>
-        <h3>Small actions, meaningful recovery</h3>
-        {habits.map((habit) => (
-          <label className="habit" key={habit}>
-            <input
-              type="checkbox"
-              checked={checked.includes(habit)}
-              onChange={() => toggle(habit)}
-            />
-            {habit}
-          </label>
-        ))}
-        <p className="metric-trend">
-          A short breathing prompt is available as a recovery routine, not medical treatment.
-        </p>
-      </section>
-      <section className="panel journal">
-        <p className="eyebrow">PRIVATE JOURNAL</p>
-        <h3>What helped you feel connected today?</h3>
-        <textarea
-          value={journal}
-          onChange={(event) => setJournal(event.target.value)}
-          placeholder="Visible only in this astronaut’s profile…"
-        />
-        <button
-          className="primary"
-          onClick={() => localStorage.setItem(`mission-pulse:journal:${astronautId}`, journal)}
-        >
-          Save private entry
-        </button>
-      </section>
+          <h4 className="checkin-subhead">Today’s resilience activities</h4>
+          <div className="checkin-activities">
+            {habits.map((activity) => (
+              <label className="habit" key={activity}>
+                <input
+                  type="checkbox"
+                  checked={activities.includes(activity)}
+                  onChange={() => toggleActivity(activity)}
+                />
+                {activity}
+              </label>
+            ))}
+          </div>
+          <button className="primary" onClick={saveCheckIn}>
+            {completedToday ? 'Update today’s check-in' : 'Save today’s check-in'}
+          </button>
+          <p className="entry-note">
+            One check-in is saved per day. Activity completion is included with today’s wellness
+            record.
+          </p>
+        </section>
+      )}
+      {tab === 'trends' && (
+        <section className="panel mental-trends">
+          <p className="eyebrow">WELLNESS & RESILIENCE TRENDS</p>
+          <h3>Daily check-in relationships</h3>
+          <p className="metric-trend">
+            Wellness scores and resilience activity completion use the same 0–5 scale, making
+            patterns easy to compare.
+          </p>
+          <MultiTrendChart series={series} suffix=" / 5" />
+        </section>
+      )}
+      {tab === 'journal' && (
+        <section className="panel journal journal-log">
+          <p className="eyebrow">JOURNAL</p>
+          <h3>Capture a reflection any time</h3>
+          <textarea
+            value={journalText}
+            onChange={(event) => setJournalText(event.target.value)}
+            placeholder="Write an entry…"
+          />
+          <button className="primary" onClick={saveJournal}>
+            Save journal entry
+          </button>
+          <div className="journal-history">
+            {entries.length ? (
+              entries.map((entry) => (
+                <article key={entry.id}>
+                  <time>{new Date(entry.date).toLocaleString()}</time>
+                  <p>{entry.text}</p>
+                </article>
+              ))
+            ) : (
+              <p className="entry-note">
+                No journal entries yet. You can add more than one entry each day.
+              </p>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -39,8 +39,9 @@ describe('Mission Pulse', () => {
     await user.click(screen.getByRole('button', { name: /Connect device/ }));
     expect(screen.getByRole('status')).toHaveTextContent('Device API is not implemented');
     await user.click(screen.getByRole('tab', { name: 'Mental' }));
-    expect(screen.getByText('PRIVATE WELLNESS CHECK-IN')).toBeInTheDocument();
-    expect(screen.getByText('PRIVATE JOURNAL')).toBeInTheDocument();
+    expect(screen.getByText('DAILY WELLNESS CHECK-IN')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Journal' }));
+    expect(screen.getByText('Capture a reflection any time')).toBeInTheDocument();
   });
 
   it('logs a session from its individual exercise card', async () => {
@@ -74,5 +75,16 @@ describe('Mission Pulse', () => {
     expect(
       screen.getByText('No active protocols. Monitoring continues in the background.'),
     ).toBeInTheDocument();
+  });
+
+  it('offers combined physical and mental trend views', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: /Dr. Mira Nwosu/ }));
+    await user.click(screen.getByRole('tab', { name: 'Trends' }));
+    expect(screen.getByText('Compare health and training patterns')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Mental' }));
+    await user.click(screen.getByRole('tab', { name: 'Trends' }));
+    expect(screen.getByText('Daily check-in relationships')).toBeInTheDocument();
   });
 });

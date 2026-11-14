@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { MetricLog } from './MetricLog';
+import { PhysicalTrends } from './PhysicalTrends';
 import { WorkoutTracker } from './WorkoutTracker';
 
 export function PhysicalHealthView({ astronautId }: { astronautId: string }) {
-  const [section, setSection] = useState<'performance' | 'log'>('performance');
+  const [section, setSection] = useState<'performance' | 'log' | 'trends'>('performance');
   return (
     <div className="health-view">
       <div className="physical-tabs" role="tablist">
@@ -23,8 +24,18 @@ export function PhysicalHealthView({ astronautId }: { astronautId: string }) {
         >
           Metric log
         </button>
+        <button
+          role="tab"
+          aria-selected={section === 'trends'}
+          className={section === 'trends' ? 'active' : ''}
+          onClick={() => setSection('trends')}
+        >
+          Trends
+        </button>
       </div>
-      {section === 'log' ? (
+      {section === 'trends' ? (
+        <PhysicalTrends astronautId={astronautId} />
+      ) : section === 'log' ? (
         <MetricLog astronautId={astronautId} />
       ) : (
         <>
