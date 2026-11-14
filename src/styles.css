@@ -1006,6 +1006,17 @@ h3 {
   width: 100%;
   text-align: left;
 }
+.exercise-card-clickable {
+  cursor: pointer;
+}
+.exercise-card-clickable:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+.exercise-card-cta {
+  color: var(--blue);
+  font-weight: 600;
+}
 .exercise-close {
   align-self: flex-start;
   margin-top: 5px;

@@ -55,12 +55,17 @@ export function ExerciseCard({
   ];
   const latest = sessions.at(-1)?.value ?? exercise.trainingTrend.at(-1);
   return (
-    <article className={`exercise-card ${expanded ? 'exercise-card-expanded' : ''}`}>
-      <button
-        className="exercise-card-head exercise-card-summary"
-        onClick={onFocus}
-        aria-label={`Open ${exercise.name}`}
-      >
+    <article
+      className={`exercise-card ${expanded ? 'exercise-card-expanded' : 'exercise-card-clickable'}`}
+      role={expanded ? undefined : 'button'}
+      tabIndex={expanded ? undefined : 0}
+      aria-label={expanded ? undefined : `Open ${exercise.name}`}
+      onClick={expanded ? undefined : onFocus}
+      onKeyDown={(event) => {
+        if (!expanded && (event.key === 'Enter' || event.key === ' ')) onFocus?.();
+      }}
+    >
+      <div className="exercise-card-head exercise-card-summary">
         <div>
           <p className="eyebrow">{exercise.device}</p>
           <h4>{exercise.name}</h4>
@@ -68,7 +73,7 @@ export function ExerciseCard({
         <span className={`exercise-category ${exercise.category.toLowerCase()}`}>
           {exercise.category}
         </span>
-      </button>
+      </div>
       <p className="exercise-target">{exercise.target}</p>
       <p className="exercise-note">{exercise.note}</p>
       <div className="exercise-reading">
@@ -84,7 +89,7 @@ export function ExerciseCard({
           unit={exercise.unit}
         />
       ) : (
-        <p className="entry-note">Select to expand workout history and trend.</p>
+        <p className="entry-note exercise-card-cta">Log workout / review</p>
       )}
       {expanded && (
         <button className="text-btn exercise-close" onClick={onClose}>
