@@ -142,11 +142,40 @@ main {
   max-width: 620px;
   color: var(--amber);
 }
-.transit-route > span {
+.transit-route > span:not(.mars-marker) {
   height: 2px;
   min-width: 32px;
   flex: 1;
   background: linear-gradient(90deg, var(--blue), var(--amber));
+}
+.transit-route .mars-marker {
+  display: grid;
+  justify-items: center;
+  position: relative;
+}
+.transit-route .mars-marker.active {
+  color: #ff9a67;
+  filter: drop-shadow(0 0 10px rgba(255, 120, 75, 0.7));
+}
+.mars-marker em {
+  position: absolute;
+  top: calc(100% + 6px);
+  white-space: nowrap;
+  color: #ffb18d;
+  font-size: 10px;
+  font-style: normal;
+}
+.transit-hero.planet-active {
+  border-color: #a6573a;
+  background:
+    radial-gradient(circle at 80% 50%, rgba(220, 89, 48, 0.32), transparent 25%),
+    radial-gradient(circle at 12% 30%, rgba(70, 143, 224, 0.12), transparent 22%), #1c1112;
+}
+.transit-hero.return-active {
+  border-color: #477eb4;
+  background:
+    radial-gradient(circle at 80% 50%, rgba(70, 143, 224, 0.26), transparent 25%),
+    radial-gradient(circle at 12% 30%, rgba(189, 94, 52, 0.14), transparent 22%), #0c1423;
 }
 .command-controls {
   flex-wrap: wrap;

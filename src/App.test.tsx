@@ -17,11 +17,21 @@ describe('Mission Pulse command centre', () => {
     render(<App />);
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Mission scenario' }), 'eva');
+    expect(screen.getByText('Mars → Earth return transit')).toBeInTheDocument();
+    expect(screen.getByText('68 days to Earth arrival')).toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: /Outside craft \/ EVA/ }));
     expect(screen.getByText('LIVE EVA TELEMETRY')).toBeInTheDocument();
 
+    await user.click(screen.getByRole('tab', { name: /On planet/ }));
+    expect(screen.getByText('Mars → Earth return transit')).toBeInTheDocument();
+
     await user.selectOptions(screen.getByRole('combobox', { name: 'Protocol state' }), 'none');
     expect(screen.getAllByText('No protocol').length).toBeGreaterThan(0);
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Mission scenario' }), 'planet');
+    await user.click(screen.getByRole('tab', { name: /On planet/ }));
+    expect(screen.getByText('Mars surface operations')).toBeInTheDocument();
+    expect(screen.getByText('1 crew member on Mars')).toBeInTheDocument();
   });
 
   it('requires demo login for the personal workspace', async () => {

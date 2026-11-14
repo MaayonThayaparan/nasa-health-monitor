@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { AlertTriangle, ArrowRight, Earth, MapPin, Mars, Radio, Wind } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  Earth,
+  Gauge,
+  LocateFixed,
+  MapPin,
+  Mars,
+  Radio,
+  Thermometer,
+  Wind,
+} from 'lucide-react';
 import { environment, crew } from '../data/missionData';
 import { scenarioCrew, scenarioLabels, type MissionMode } from '../data/commandScenarios';
 import { EnvironmentMetrics } from './EnvironmentMetrics';
@@ -27,21 +38,48 @@ export function CommandCentre({
     eva: crew.filter((person) => positions[person.id].location === 'eva').length,
     planet: crew.filter((person) => positions[person.id].location === 'planet').length,
   };
+  const isMarsSurfaceScenario = mode === 'planet';
+  const isReturnScenario = mode === 'eva';
   return (
     <section className="command-centre">
       <div className="command-top">
-        <div className="transit transit-hero">
+        <div
+          className={`transit transit-hero ${isMarsSurfaceScenario ? 'planet-active' : ''} ${isReturnScenario ? 'return-active' : ''}`}
+        >
           <div className="transit-copy">
             <p className="eyebrow">MISSION TRANSIT</p>
-            <b>Earth → Mars transit</b>
-            <small>142 days to Mars landing</small>
+            <b>
+              {isMarsSurfaceScenario
+                ? 'Mars surface operations'
+                : isReturnScenario
+                  ? 'Mars → Earth return transit'
+                  : 'Earth → Mars transit'}
+            </b>
+            <small>
+              {isMarsSurfaceScenario
+                ? `${locationCounts.planet} crew member${locationCounts.planet === 1 ? '' : 's'} on Mars`
+                : isReturnScenario
+                  ? '68 days to Earth arrival'
+                  : '142 days to Mars landing'}
+            </small>
           </div>
           <div className="transit-route" aria-label="Earth to Mars mission route">
-            <Earth size={42} aria-label="Earth" />
+            {isReturnScenario ? (
+              <Mars size={42} aria-label="Mars" />
+            ) : (
+              <Earth size={42} aria-label="Earth" />
+            )}
             <span />
             <ArrowRight size={24} />
             <span />
-            <Mars size={42} aria-label="Mars" />
+            {isReturnScenario ? (
+              <Earth size={42} aria-label="Earth" />
+            ) : (
+              <span className={isMarsSurfaceScenario ? 'mars-marker active' : 'mars-marker'}>
+                <Mars size={42} aria-label="Mars" />
+                {isMarsSurfaceScenario ? <em>{locationCounts.planet} on surface</em> : null}
+              </span>
+            )}
           </div>
         </div>
         <div className="command-controls">
@@ -219,8 +257,17 @@ function LiveTable({ crew: people, tab }: { crew: CrewMember[]; tab: CentreTab }
             <span>
               <Wind /> O₂ {tab === 'eva' ? '71%' : '64%'}
             </span>
-            <span>Pressure {tab === 'eva' ? '29.6 kPa' : '58.2 kPa'}</span>
-            <span>Temp {tab === 'eva' ? '−18°C' : '−31°C'}</span>
+            <span>
+              <Gauge /> Pressure {tab === 'eva' ? '29.6 kPa' : '58.2 kPa'}
+            </span>
+            <span>
+              <Thermometer /> Temp {tab === 'eva' ? '−18°C' : '−31°C'}
+            </span>
+            {tab === 'planet' ? (
+              <span>
+                <LocateFixed /> Coordinates 22.3°N, 343.5°E
+              </span>
+            ) : null}
             <span>
               <Radio /> Link nominal
             </span>
