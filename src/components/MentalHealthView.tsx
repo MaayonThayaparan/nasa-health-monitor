@@ -21,6 +21,7 @@ const seed: Record<WellnessMetric, number[]> = {
   'Sleep quality': [3, 3, 4, 3, 4],
   Connection: [2, 3, 3, 4, 4],
 };
+const resilienceSeed = [1, 3, 2, 5, 4];
 const dayKey = (date: string) => new Date(date).toLocaleDateString('en-CA');
 
 export function MentalHealthView({ astronautId }: { astronautId: string }) {
@@ -70,11 +71,18 @@ export function MentalHealthView({ astronautId }: { astronautId: string }) {
       id: 'resilience',
       label: 'Resilience activities completed',
       color: '#b8d26e',
-      points: checkIns.map((checkIn) => ({
-        day: new Date(checkIn.date).toLocaleDateString(),
-        value: checkIn.activities?.length ?? 0,
-        source: 'manual',
-      })),
+      points: [
+        ...resilienceSeed.map((value, point) => ({
+          day: `D-${resilienceSeed.length - point - 1}`,
+          value,
+          source: 'simulated',
+        })),
+        ...checkIns.map((checkIn) => ({
+          day: new Date(checkIn.date).toLocaleDateString(),
+          value: checkIn.activities?.length ?? 0,
+          source: 'manual',
+        })),
+      ],
       axis: 'right',
       suffix: ' activities',
     },
